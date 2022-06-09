@@ -16,6 +16,9 @@ library(daewr)
 library(emmeans)
 library(plotly)
 library(DT)
+library(hrbrthemes)
+library(viridis)
+library(ggpubr)
 
 # Función para potencia teórica media entre celdas
 
@@ -167,7 +170,7 @@ plot_power_fac_b <- function(df_1,signi,replicas,sigma,diferencia,a,b){
 ## Gráfico de homocedasticidad
 
 homocedast <- function(datos){
-  mod3 <-lm(response ~ F1*F2, datos)
+  mod3 <-lm(response ~ F1+F2, datos)
   est <- mod3$fitted.values
   pred <- mod3$residuals
   bd1 <- data.frame(est, pred)
@@ -185,7 +188,7 @@ homocedast <- function(datos){
 
 # Supuesto de normalidad para supuestos
 normalidad <- function(datos){
-  res <- lm(response~F1*F2,datos)
+  res <- lm(response~F1+F2,datos)
   p2 <- ggplot(datos, aes(sample = res$residuals))+ 
     stat_qq(size= I(3)) + stat_qq_line(size= I(0.6)) +
     ggtitle('Prueba de normalidad') +
@@ -194,7 +197,71 @@ normalidad <- function(datos){
   return(p2)
 }
 
+# Estadistica descriptiva
+stadis_desc <- function(df){
+  
+  bar_y <- mean(df$response)
+  table <- df %>% 
+    group_by(F2) %>%
+    summarise(
+      n = length(response), 
+      media = mean(response), 
+      sd = sd(response), 
+      min = min(response), 
+      max = max(response),
+      cv = sd(response)/mean(response)*100)
+  return(table)}
 
+# Estadistica descriptiva
+stadis_desc1 <- function(df){
+  
+  bar_y <- mean(df$response)
+  table <- df %>% 
+    group_by(F1) %>%
+    summarise(
+      n = length(response), 
+      media = mean(response), 
+      sd = sd(response), 
+      min = min(response), 
+      max = max(response),
+      cv = sd(response)/mean(response)*100)
+  return(table)}
+
+
+# Para graficar comparacion de medias y p-valores
+Tukey1 <- function(datos){
+  
+  datos$F1 <- factor(data$F1)
+  datos$F2 <- factor(data$F2)
+  res <- lm(response~F1+F2,datos)
+  tky1 = as.data.frame(TukeyHSD(aov(res))$F1)
+  tky1$pair = rownames(tky1) 
+  
+  # Plot pairwise TukeyHSD comparisons and color by significance level
+  p10 <-  ggplot(tky1, aes(colour=cut(`p adj`, c(0, 0.01, 0.05, 1), 
+                                     label=c("p<0.01","p<0.05","Non-Sig")))) +
+    geom_hline(yintercept=0, linetype ='dashed') +
+    geom_errorbar(aes(pair, ymin=lwr, ymax=upr), width=0.2,size=0.8) +
+    geom_point(aes(pair, diff),size=2) +
+    labs(colour="") +
+    ggtitle(TeX('Model = respuesta ~ treat')) +
+    theme(plot.title = element_text(hjust = 0.5, size = rel(1.5))) +
+    labs(y="Diferencia", x="Pares")
+  
+  p10
+  
+}
+
+
+
+
+
+
+
+
+
+
+##############################################################################
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
 
@@ -292,16 +359,16 @@ shinyServer(function(input, output) {
   })
   
   #################################################
-
+  ## Datos para crear el diseño en bloques
   dataF1F2 <- eventReactive(input$go,{
     eF1 <- t(dF1())
     eF2 <- t(dF2())
-    eF1F2 <- dinter()
     
     data <- data.frame(
-      F1=rep(rep(1:input$rows,input$n),input$cols) %>% sort,
-      F2=rep(rep(1:input$cols,input$n),input$rows) 
+      F1=rep(rep(1:input$rows,input$n),input$cols),
+      F2=rep(rep(1:input$cols),input$rows) %>% sort()
     )
+    
     ra <- input$rows
     ca <- input$cols
     n <- input$n
@@ -309,7 +376,7 @@ shinyServer(function(input, output) {
     
     ss <- input$sigma
     res <- rnorm(k,0,input$sigma)
-    data <- data %>% mutate(response=input$mu+eF1[F1]+eF2[F2]+eF1F2[cbind(F1, F2)]+rnorm(k,0,input$sigma))
+    data <- data %>% mutate(response=input$mu+eF1[F1]+eF2[F2]+rnorm(k,0,input$sigma))
      
     data
   },ignoreNULL = T)
@@ -349,24 +416,27 @@ shinyServer(function(input, output) {
       sd1 = sd))
 
     ggplot(d) +
-      aes(x = F1, y = response,
-          color = F2,
-          group = F2) +
+      aes(x = F2, y = response,
+          color = F1,
+          group = F1) +
       stat_summary(fun.data = mean_se, 
                    geom = "pointrange") +
       geom_line(stat = "summary", fun = mean, size=.75)+
+      labs(x='Bloques',y='Respuesta',color='Factor')+
       ylim(input$yRange[1],input$yRange[2])
     
   })
   
-  ## Tabla de medias observadas
+  ## Tabla resumen por bloques
   output$TableMeans <- renderTable({
-    d <- dataF1F2() %>% as.data.frame()
-    d$F1 <- factor(d$F1)
-    d$F2 <- factor(d$F2)
-    d2 <- d %>% group_by(F1,F2) %>% summarise(m=mean(response))
-    spread(d2,key=F2,value=m) 
+    stadis_desc(dataF1F2())
   })
+  
+  ## Tabla resumen por tratamiento
+  output$TableMeans1 <- renderTable({
+    stadis_desc1(dataF1F2())
+  })
+  
   
   ## Tabla de ANOVA
   output$ANOVA <- renderPrint({
@@ -374,9 +444,17 @@ shinyServer(function(input, output) {
     d$F1 <- factor(d$F1)
     d$F2 <- factor(d$F2)
      
-    if(input$optAnova==FALSE) {res <- lm(response~F1*F2,d)}
-      else {res <- lm(response~F1+F2,d)}
+    res <- lm(response~F1+F2,d)
+    anova(res)
+  })
+  
+  # Anova sin el factor del bloque
+  output$ANOVA1 <- renderPrint({
+    d <- dataF1F2() %>% as.data.frame()
+    d$F1 <- factor(d$F1)
+    d$F2 <- factor(d$F2)
     
+    res <- lm(response~F1,d)
     anova(res)
   })
   
@@ -386,10 +464,7 @@ shinyServer(function(input, output) {
     d$F1 <- factor(d$F1)
     d$F2 <- factor(d$F2)
     
-    if(input$optAnova==FALSE) {res <- lm(response~F1*F2,d)}
-    else {res <- lm(response~F1+F2,d)}
-    #summary(res)
-    #data.frame(effect=coefficients(res),lower=confint(res)[,1],upper=confint(res)[,2])
+    res <- lm(response~F1+F2,d)
     plot_model(res)
   })
   
@@ -398,23 +473,12 @@ shinyServer(function(input, output) {
     d <- dataF1F2() %>% as.data.frame()
     d$F1 <- factor(d$F1)
     d$F2 <- factor(d$F2)
-    if(input$optAnova==FALSE) {res <- lm(response~F1*F2,d)}
-    else {res <- lm(response~F1+F2,d)}
-    #summary(res)
+    
+    res <- lm(response~F1+F2,d)
     data.frame(effect=round(coefficients(res),2),lower=round(confint(res)[,1],2),upper=round(confint(res)[,2],2))
     #HTML(knitr::knit_print(tab_model(res)) )
   })
   
-  ## Gráfico de medias sin desviación estándar
-  output$PlotCleanMeans <- renderPlot({
-    d <- cleanData()
-    d$F1 <- factor(d$F1)
-    d$F2 <- factor(d$F2)
-    ggplot(d,aes(F1,response,group=F2))+
-      geom_point(size=3,aes(color=F2))+
-      geom_line(size=1,aes(color=F2))+
-      ylim(input$yRange[1],input$yRange[2])
-  })
   
   ## Tabla de medias sin desviación estándar
   output$TableCleanMeans <- renderTable({
@@ -433,25 +497,36 @@ shinyServer(function(input, output) {
     d <- dataF1F2()
     d$F1 <- factor(d$F1)
     d$F2 <- factor(d$F2)
-    bartlett.test(response~interaction(F1,F2),data=d)
+    bartlett.test(response~F1,data=d)
   })
   
   
   
   # Plot emmeans para interacción
   output$plot_emmeans2 <- renderPlot({
-    d <- dataF1F2() %>% as.data.frame()
-    d$F1 <- factor(d$F1)
-    d$F2 <- factor(d$F2)
-    res1 <- anova(lm(response~F1*F2,d))
-    res <- aov(response~F1*F2, d)
-    lsm_int <- emmeans(res, ~ F1:F2)
-    lsm_A <- emmeans(res, ~ F1)
     
-    if(res1$`Pr(>F)`[3]<0.05) {contrastes <- contrast(lsm_int, method = "pairwise", by = "F1")
-    plot(contrastes)+coord_flip()+geom_vline(xintercept = 0, linetype="dashed")}
-    else {contrastes1 <- contrast(lsm_A, method = "pairwise")
-    plot(contrastes1)+coord_flip()+geom_vline(xintercept = 0, linetype="dashed")}
+    datos <- dataF1F2() %>% as.data.frame()
+    
+    datos$F1 <- factor(datos$F1)
+    datos$F2 <- factor(datos$F2)
+    
+    res <- lm(response~F1+F2,datos)
+    tky1 = as.data.frame(TukeyHSD(aov(res))$F1)
+    tky1$pair = rownames(tky1) 
+    
+    # Plot pairwise TukeyHSD comparisons and color by significance level
+    p10 <-  ggplot(tky1, aes(colour=cut(`p adj`, c(0, 0.01, 0.05, 1), 
+                                        label=c("p<0.01","p<0.05","Non-Sig")))) +
+      geom_hline(yintercept=0, linetype ='dashed') +
+      geom_errorbar(aes(pair, ymin=lwr, ymax=upr), width=0.2,size=0.8) +
+      geom_point(aes(pair, diff),size=2) +
+      labs(colour="") +
+      ggtitle(('Model = respuesta ~ treat')) +
+      theme(plot.title = element_text(hjust = 0.5, size = rel(1.5))) +
+      labs(y="Diferencia", x="Pares")
+    
+    p10
+    
     })
   
   # Plot emmeans para interacción
@@ -670,11 +745,10 @@ shinyServer(function(input, output) {
     
     eF1 <- t(dF1())
     eF2 <- t(dF2())
-    eF1F2 <- dinter()
     
-    data1 <- data.frame(
-      F1=rep(rep(1:rows,n),cols) %>% sort,
-      F2=rep(rep(1:cols,n),rows) 
+    data <- data.frame(
+      F1=rep(rep(1:input$rows,input$n),input$cols),
+      F2=rep(rep(1:input$cols),input$rows) %>% sort()
     )
     ra1 <- rows
     ca1 <- cols
@@ -683,15 +757,14 @@ shinyServer(function(input, output) {
     
     ss1 <- sigma
     #res5 <- rnorm(k1,0,ss1)
-    data1 <- data1 %>% mutate(response=input$mu+eF1[F1]+eF2[F2]+eF1F2[cbind(F1,F2)]+rnorm(k1,0,ss1))
+    data1 <- data1 %>% mutate(response=input$mu+eF1[F1]+eF2[F2]+rnorm(k1,0,ss1))
     
     data1$F1 <- as.factor(data1$F1)
     data1$F2 <- as.factor(data1$F2)
     
     data1
     
-    modd <- anova(lm(response ~ F1*F2,data1))
-    r2 <- modd$`F value`[3]
+    modd <- anova(lm(response ~ F1+F2,data1))
     r3 <- modd$`F value`[2]
     r4 <- modd$`F value`[1]
 
@@ -809,17 +882,17 @@ shinyServer(function(input, output) {
     colum <- rep(t(dF2()),length(t(dF2())))
     eff_j <- matrix(colum,nrow = input$rows, ncol = input$cols,byrow = T)
     interac <- as.matrix(dinter())
-    cell_mean <- input$mu+eff_i+eff_j+interac
+    cell_mean <- input$mu + eff_i + eff_j
     
     #mm <- mean(colMeans(cell_mean))
-    mi <- rowMeans(cell_mean)
-    #mj <- colMeans(cell_mean)
+    #mi <- rowMeans(cell_mean)
+    mj <- colMeans(cell_mean)
     
     #css <- sum((cell_mean-mm)^2)
-    cssi <- sum((mi-mean(mi))^2)
-    #cssj <- sum((mj-mean(mj))^2)
+    #cssi <- sum((mi-mean(mi))^2)
+    cssj <- sum((mj-mean(mj))^2)
     
-    pnc <- cols_sim*(n_sim*cssi)/sigma_sim^2
+    pnc <- cols_sim*cssj/sigma_sim^2
     
     
     f <- replicate(num_sim, dataF1F2_sim_sim(rows_sim,n_sim,cols_sim,sigma_sim)$f_a) # cocientes F simulados
@@ -829,12 +902,12 @@ shinyServer(function(input, output) {
     
     # Distribución F de simulación y la F teorica
     ua <- qf(p = 0.95, df1 = rows_sim-1, 
-             df2 = (n_sim - 1)*(rows_sim * cols_sim))
+             df2 = (cols_sim - 1)*(rows_sim - 1))
     
     power <- sum(f>ua)/num_sim
     
     powert <- 1-pf(ua,rows_sim-1,
-                   (n_sim - 1)*(rows_sim * cols_sim),lambda)%>%round(2)
+                   (cols_sim - 1)*(rows_sim - 1),lambda)%>%round(2)
 
     
     p5 <- ggplot(data1, aes(f))+
@@ -848,7 +921,7 @@ shinyServer(function(input, output) {
         alpha = .7,
         args = list(
           df1 = rows_sim-1,
-          df2 = (n_sim - 1)*(rows_sim * cols_sim),
+          df2 = (cols_sim - 1)*(rows_sim - 1),
           ncp = lambda)) +
       
       stat_function(
@@ -859,7 +932,7 @@ shinyServer(function(input, output) {
         alpha = .6,
         args = list(
           df1 = rows_sim-1,
-          df2 = (n_sim - 1)*(rows_sim * cols_sim),
+          df2 = (cols_sim - 1)*(rows_sim - 1),
           ncp = lambda
         ), 
         xlim = c(ua, 30)
@@ -871,7 +944,7 @@ shinyServer(function(input, output) {
         linetype = 2,
         args = list(
           df1 = rows_sim-1,
-          df2 = (n_sim - 1)*(rows_sim * cols_sim)
+          df2 = (cols_sim - 1)*(rows_sim - 1)
         )
       ) + 
       xlim(0,30)+
@@ -881,7 +954,7 @@ shinyServer(function(input, output) {
     
     
     #     power <- sum(f>qf(1-alfas,ks-1,(n_tot)-ks))/nsim
-    list(p5=p5,cssi=cssi)
+    list(p5=p5,cssi=fila)
     
   }
   
@@ -1200,13 +1273,13 @@ shinyServer(function(input, output) {
   
   # Gráfico de homocedasticidad para simulación
   output$homocedas <- renderPlot({
-    d = datos11()
+    d = dataF1F2()
     homocedast(d)
   })
   
   # qq-plot
   output$normali <- renderPlot({
-    d = datos11()
+    d = dataF1F2()
     normalidad(d)
   })
   
@@ -1232,8 +1305,8 @@ shinyServer(function(input, output) {
   # tabla de shapiro para datos simulados
   output$shapiro <- renderPrint({
     
-    d = datos11() 
-    shapi <- lm(response~F1*F2,d)
+    d = dataF1F2() 
+    shapi <- lm(response~F1+F2,d)
     shapiro.test(shapi$residuals)
     
   })
@@ -1468,7 +1541,38 @@ shinyServer(function(input, output) {
     
   })
   
-  #Potencia para datos incluidos por el usuario
+  ## Gráfico de medias sin desviación estándar
+  output$PlotCleanMeans <- renderPlot({
+    x <- LETTERS[1:input$rows]
+    y <- letters[1:input$cols]
+    data <- expand.grid(X=x, Y=y)
+    data$Magnitud <- dataF1F2()[,-(1:2)]
+    
+    # Give extreme colors:
+    ggplot(data, aes(X, Y, fill= Magnitud)) + 
+      geom_tile() +
+      scale_fill_viridis(discrete=FALSE) +
+      theme_ipsum()+
+      labs(x='Niveles del factor', y='Bloques')
+  })
+  
+  
+
+  
+  output$algo <- renderPrint({
+    
+    simulation_f_a(num_sim=input$num_sim,
+                   mu_sim=input$mu, 
+                   sigma_sim=input$sigma,
+                   n_sim=input$n,
+                   rows_sim=input$rows, 
+                   cols_sim=input$cols)$cssi
+    
+  })
+  
+  
+  
+  
   
   
   

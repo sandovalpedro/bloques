@@ -197,20 +197,20 @@ shinyUI(
                                numericInput('num_sim',withMathJax('Simulations'),value=500),
                                numericInput('mu',withMathJax('Mean in absence of effects (\\(\\mu\\))'),value=100),
                                numericInput('sigma',withMathJax('Common \\(\\sigma\\)'),value=3),
-                               numericInput('n','Sample size per cell',value=3),
+                               numericInput('n','Sample size per cell',value=1),
                                numericInput('alfa','Significance level',value=0.05),
                                hr(),
-                               numericInput('rows',withMathJax('Levels of factor F1 (rows: \\(\\alpha_i\\) )'),value=4),
-                               h5(withMathJax('Effects of \\(F_1\\) (\\(\\alpha_i\\))')),
+                               numericInput('rows',withMathJax('Levels of factor F (rows: \\(\\alpha_i\\) )'),value=4),
+                               h5(withMathJax('Effects of \\(F\\) (\\(\\alpha_i\\))')),
                                rHandsontableOutput("input_table_F1"),
                                br(),br(),
-                               numericInput('cols',withMathJax('Levels of factor F2 (cols: \\(\\beta_j\\))'),value=4),
-                               h5(withMathJax('Effects of \\(F_2\\) (\\(\\beta_j\\))')),
+                               numericInput('cols',withMathJax('Levels of factor F2 (cols: \\(\\beta_j\\))'),value=8),
+                               h5(withMathJax('Blocks of \\(b\\) (\\(b_j\\))')),
                                rHandsontableOutput("input_table_F2"),
                                hr(),
-                               h5(withMathJax('Interaction parameters (\\(\\gamma_{ij}\\))')),
-                               rHandsontableOutput("input_table"),
-                               hr(),
+                               #h5(withMathJax('Interaction parameters (\\(\\gamma_{ij}\\))')),
+                               #rHandsontableOutput("input_table"),
+                               #hr(),
                                fluidPage(
                                  column(3,actionButton('go','New data')),
                                  br(),br(),
@@ -220,28 +220,29 @@ shinyUI(
                         
                         column(9,
                                tabsetPanel(
-                                 tabPanel('Expected means',
+                                 tabPanel('Heat Map',
                                           br(),br(),
-                                          h3('Expected means corresponding to the defined effects'),
+                                          h3('Heat Map'),
                                           hr(),
-                                          withMathJax("The expected mean of a cell \\((i,j)\\) (combination of the level \\(i\\) of \\(F_1\\)
-                                                           and level \\(j\\) of \\(F_2\\)) is computed as:
-                                                          "),
-                                          withMathJax("\\(\\mu_{ij}=\\mu + \\alpha_i + \\beta_j + \\gamma_{ij} \\)"),
+                                          withMathJax("The heat map for levels of factor \\(\\alpha_i\\) and blokcs \\(b_j\\)"),
+                                          #withMathJax("\\(\\mu_{ij}=\\mu + b_j + \\alpha_i \\)"),
                                           hr(),
                                           plotOutput('PlotCleanMeans'),
-                                          hr(),
-                                          h4(HTML("Tabla de medias entre celdas")),
-                                          tableOutput('TableCleanMeans')
+                                          hr()
+                                          #h4(HTML("Tabla de medias entre celdas")),
+                                          #tableOutput('TableCleanMeans')
                                           ),
                                  tabPanel('Observed means',
                                           column(7,
                                                  br(),br(),
                                                  h3('Observed means'),
                                                  hr(),
+                                                 h3(HTML("Tabla resumen por bloque")),
                                                  tableOutput('TableMeans'),
                                                  hr(),
-                                                 h3("Means and 95% CI"),
+                                                 h3(HTML("Tabla resumen por Tratamiento")),
+                                                 tableOutput('TableMeans1'),
+                                                 h3("Comportamiento del factor en el bloque"),
                                                  hr(),
                                                  plotOutput('Means')
                                                  ),
@@ -271,49 +272,61 @@ shinyUI(
                                                  verbatimTextOutput('shapiro')
                                                  )),
                                  tabPanel('ANOVA',
-                                          br(),br(),
-                                          checkboxInput('optAnova','Test without interactions?',value=FALSE),
-                                          h3('ANOVA table for the generated example'),
-                                          hr(),
-                                          verbatimTextOutput('ANOVA'),
-                                          hr(),
-                                          h3('Estimated effects and 95% CI'),
-                                          hr(),
-                                          fluidPage(
-                                            column(8,verbatimTextOutput('TableEstimatedEffects'))
-                                          )
-                               ),
-                               tabPanel('Pairwise comparisons',
-                                        fluidPage(
-                                          br(),
-                                          h3('Effects'),
-                                          hr(),
-                                          column(6 ,
-                                                 h3(HTML("Compración por pares para \\(F_1\\)")),
-                                                 plotOutput('plot_emmeans2')),
                                           column(6,
-                                                 h3(HTML("Compración por pares para \\(F_2\\)")),
-                                                 plotOutput('plot_emmeans3'))
-                                        )
-                                        ),
+                                                 br(),
+                                                 #checkboxInput('optAnova','Test without interactions?',value=FALSE),
+                                                 h3('ANOVA table for the generated example'),
+                                                 hr(),
+                                                 verbatimTextOutput('ANOVA'),
+                                                 hr(),
+                                                 h3('ANOVA sin efecto del bloque'),
+                                                 hr(),
+                                                 verbatimTextOutput('ANOVA1'),
+                                                 ),
+                                          column(6,
+                                                 h3(HTML("Compración por pares para \\(F_1\\)")),
+                                                 hr(),
+                                                 plotOutput('plot_emmeans2'),hr()
+                                                 )
+                                         
+                                          #h3('Estimated effects and 95% CI'),
+                                          #hr(),
+                                          #fluidPage(
+                                          #  column(8,verbatimTextOutput('TableEstimatedEffects'))
+                                          #)
+                               ),
+                               # tabPanel('Pairwise comparisons',
+                               #          fluidPage(
+                               #            br(),
+                               #            h3('Effects'),
+                               #            hr(),
+                               #            column(6 ,
+                               #                   h3(HTML("Compración por pares para \\(F_1\\)")),
+                               #                   plotOutput('plot_emmeans2')),
+                               #            column(6,
+                               #                   h3(HTML("Compración por pares para \\(F_2\\)")),
+                               #                   plotOutput('plot_emmeans3'))
+                               #          )
+                               #          ),
                                tabPanel('Power',
                                         
                                         column(6,
                                                h3(HTML("Potencia para factor \\(A\\)")),
                                                #actionButton('go_a', 'Potencia \\(F_1(\\alpha_i)\\)', class = "btn-warning"),
-                                               plotOutput('f_nocentrada_a')
-                                        ),
-                                        column(6,
-                                               h3(HTML("Potencia para factor \\(B\\)")),
-                                               #actionButton('go_b','Potencia \\(F_2(\\beta_j)\\)', class = "btn-warning"),
-                                               plotOutput('f_nocentrada_b'),
-                                               h3(HTML("Potencia para factor \\(\\gamma_{ij}\\)")),
-                                               #actionButton('go_int','Potencia \\(\\gamma_{ij}\\)', class = "btn-warning"),
-                                               plotOutput('f_nocentrada_int'),
-                                               #actionButton('go_tab','Table', class = "btn-warning"),
-                                               #tableOutput('css'),
-                                               #verbatimTextOutput('mm')
+                                               plotOutput('f_nocentrada_a'),
+                                               tableOutput("algo")
                                         )
+                                        # column(6,
+                                        #        h3(HTML("Potencia para factor \\(B\\)")),
+                                        #        #actionButton('go_b','Potencia \\(F_2(\\beta_j)\\)', class = "btn-warning"),
+                                        #        plotOutput('f_nocentrada_b'),
+                                        #        h3(HTML("Potencia para factor \\(\\gamma_{ij}\\)")),
+                                        #        #actionButton('go_int','Potencia \\(\\gamma_{ij}\\)', class = "btn-warning"),
+                                        #        plotOutput('f_nocentrada_int'),
+                                        #        #actionButton('go_tab','Table', class = "btn-warning"),
+                                        #        #tableOutput('css'),
+                                        #        #verbatimTextOutput('mm')
+                                        # )
                                         
                                         
                                         
