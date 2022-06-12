@@ -335,10 +335,10 @@ shinyUI(
                                tabPanel(HTML("Function <br>power"),
                                         h3(HTML("Función de potencia para factor \\(\\alpha_i\\)")),
                                         plotlyOutput("curve_powera"),hr(),br(),br(),
-                                        h3(HTML("Función de potencia para factor \\(\\beta_j\\)")),
-                                        plotlyOutput("curve_powerb"),hr(),br(),br(),
-                                        h3(HTML("Función de potencia para interacción \\(\\gamma_{ij}\\)")),
-                                        plotlyOutput("curve_powerc"),br()
+                                        # h3(HTML("Función de potencia para factor \\(\\beta_j\\)")),
+                                        # plotlyOutput("curve_powerb"),hr(),br(),br(),
+                                        # h3(HTML("Función de potencia para interacción \\(\\gamma_{ij}\\)")),
+                                        # plotlyOutput("curve_powerc"),br()
                                         )
                                )
                                
