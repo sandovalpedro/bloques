@@ -1,0 +1,13 @@
+"","cond1.young.male","cond2.young.male","cond3.young.male","cond1.old.male","cond2.old.male","cond3.old.male","cond1.young.female","cond2.young.female","cond3.young.female","cond1.old.female","cond2.old.female","cond3.old.female"
+"cond1.young.male",1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"cond2.young.male",0.7,1,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"cond3.young.male",0.7,0.7,1,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"cond1.old.male",NA,NA,NA,1,NA,NA,NA,NA,NA,NA,NA,NA
+"cond2.old.male",NA,NA,NA,0.7,1,NA,NA,NA,NA,NA,NA,NA
+"cond3.old.male",NA,NA,NA,0.7,0.7,1,NA,NA,NA,NA,NA,NA
+"cond1.young.female",NA,NA,NA,NA,NA,NA,1,NA,NA,NA,NA,NA
+"cond2.young.female",NA,NA,NA,NA,NA,NA,0.7,1,NA,NA,NA,NA
+"cond3.young.female",NA,NA,NA,NA,NA,NA,0.7,0.7,1,NA,NA,NA
+"cond1.old.female",NA,NA,NA,NA,NA,NA,NA,NA,NA,1,NA,NA
+"cond2.old.female",NA,NA,NA,NA,NA,NA,NA,NA,NA,0.7,1,NA
+"cond3.old.female",NA,NA,NA,NA,NA,NA,NA,NA,NA,0.7,0.7,1

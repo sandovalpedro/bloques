@@ -15,177 +15,248 @@ library(plotly)
 # Define UI for application that draws a histogram
 shinyUI(
   fluidPage(
-  navbarPage("Factorial design (two factors)", inverse=T,
-             navbarMenu("Theory",
-                        tabPanel("Description",
-                                 
-                                 p(HTML("El diseño completamente al azar de dos o más factores, 
-                                        tamibién llamado diseño factorial, tiene la característica 
-                                        de ser utilizado cuando el investigador está interesado 
-                                        en determinar el efecto de dos o más factores por separado 
-                                        y el efecto de cada nivel de un factor evaluado en cada 
-                                        nivel de los otros factores. <br><br>
-                                        El modelo lineal que describe este diseño viene dado por:"),
-                                        
-                                   hr(),
-                                   
-                                   p(HTML("$$y_{ijk} = \\mu + \\alpha_i + \\beta_j + (\\alpha\\beta)_{ij} 
-                                        + \\epsilon_{ijk}$$")),
-                                   
-                                   hr(),
-                                   
-                                   p(HTML("
-                                        
-                                        <br><br>
-                                        Donde \\(y_{ijk}\\) es la variable respuesta, \\(\\alpha_i\\) 
-                                        es el efecto del factor \\(\\alpha\\) en el nivel \\(i\\),
-                                        \\(\\beta_j\\) es el efecto del factor \\(\\beta\\) en el nivel 
-                                        \\(j\\), \\((\\alpha\\beta)_{ij}\\) es el efecto de interacción 
-                                        que viene dado por \\(\\mu_{ij}-\\mu+\\alpha_i+\\beta_j\\), donde 
-                                        \\(\\mu_{ij}\\) es la media de la celda de fila \\(i\\) y columna 
-                                        \\(j\\). Por último \\(\\epsilon_{ijk}\\) es el término residual.
-                                        <br><br>
-                                        Las pruebas de hipótesis a poner a prueba en un diseño completamente 
-                                        al azar de dos factores son:<br><br>")),
-                                  hr(),
-                                        
-                                  p(HTML("$$H_0:\\alpha_i=0$$ 
-                                        $$H_1:\\alpha_i \\neq 0$$ <br>")),
-                                  hr(),
-                                   
-                                  p(HTML("$$H_0:\\beta_j=0$$ 
-                                        $$H_1:\\beta_j \\neq 0$$ <br>")),
-                                  hr(),
-                                  
-                                  p(HTML("$$H_0:(\\alpha\\beta)_{ij}=0$$ 
-                                           $$H_1:(\\alpha\\beta)_{ij} \\neq 0$$"))
-                                
-                                 
-                             )),
-                        tabPanel(p(HTML("Supuestos y <br> Objetivos")),
-                                 h3(HTML("Supuestos")),
-                                 p(HTML("Al igual que en el diseño completamente al azar de un factor, 
-                                        el cumplimiento de los supuestos del modelo lineal es de vital 
-                                        importancia para los diseños factoriales. Esto garantiza que los 
-                                        cocientes \\(F\\) se aproximen a la distribución teórica planteada.<br>
-                                        <br>
-                                        Para estos diseño la independencia de las unidesdes experimentales es de 
-                                        vital importancia para garantizar que no se presenten estructuras de correlación 
-                                        en los datos que pueden invalidar los resultados.<br><br>
-                                        En resumen, los residuales del modelo deben cumplir:")),
+  navbarPage("Randomized Block Design (RBD)", inverse=T,
+             
+             tabPanel("Home",
+                      column(5,br(),br(),br(),br(),
+                             h2(HTML("Randomized Block Design (RBD)")),
+                             h3(HTML("A shiny app for understanding the use, 
+                                     interpretation, and limitations of complete 
+                                     randomized block design in biology science."))
+                      ),
+                      column(7,
+                             img(src = "figura1.PNG", width=600)
+                      )
+             ),
+             
+             
+             
+             navbarMenu(HTML("Goals and Statistical <br>Background"),
+                        
+                        tabPanel("Goals",
+                                 withMathJax(),
+                                 hr(),
+                                 h3(HTML("What are we interested in?")),
                                  hr(),
                                  
-                                 p(HTML("$$\\epsilon_{ijk}\\approx NID(0,\\sigma^2)$$")),
-                                 
-                                 hr(),
-                                
-                                 p(HTML("
-                                        Como se mencionó para el diseño completamente al azar de un factor, el supuesto 
-                                        de independencia se debe comprobar desde la génesis del diseño, esto quiere decir 
-                                        que no se cuenta con una prueba o gráfico para cumplir con este supuesto 
-                                        en estos diseños. <br><br>
-                                        Por otro lado, el supuesto de normalidad podría ser analizado de dos formas:<br><br>
-                                        1. De forma gráfica, mediante el gráfico qq-plot <br>
-                                        2. Mediante una prueba estadística (por ejemplo la prueba de Shapiro-Wilk) <br><br>
+                                 column(7,
+                                        h4(HTML("The RBD is carried out when there is evidence of inhomogeneity 
+                                          of the experimental units. The inclusion of blocks in the 
+                                          design increases the sensitivity of the experiment.
+                                     <br><br>
+                                     The hypotheses to be tested are:
+                                     ")),
+                                        p(HTML("$$H_{0}: \\alpha_{i}=0$$")),
+                                        p(HTML("$$H_{a}: \\alpha_{i} \\neq 0$$")),
                                         
-                                        La homocedasticidad también podría ser probada de forma gráfica (mediante el gráfico de 
-                                        residuales contra predichos) y mediante una prueba estadística, por ejemplo 
-                                        la prueba de Battlet.
-                                        ")),
-                                 hr(),
-                                 h3(HTML("Objetivos")),
-                                 p(HTML("Uno de los principales objetivos de un diseño factorial es determinar el comportamiento 
-                                        que presenta la variable respuesta cuando dos o más variables explicatorias (factores) 
-                                        interarctúan entre si. En ocaciones es de vital importancia para la investigadora o 
-                                        investigador conocer si la variable respuesta en los niveles de uno de los factores tiene 
-                                        el mismo comportamiento en los niveles de los otros factores. <br><br>
-                                        En caso que esta sea la situación, se podrán concluir que no existe interacción entre los 
-                                        factores, y con ello se podrían analizar los efectos principales de forma separada.
-                                        En caso contrario, si el comportamiento de la variable respuesta en uno de los niveles no 
-                                        presenta el mismo comportamiento en los niveles de los otros factores, entonces se estará en 
-                                        presencia de interacción, generando una restricción en el análisis de los factores principales.
-                                        "))
-                                 ),
-                        tabPanel("Power",
-                                 p(HTML("El concepto de potencia está asociado al error tipo II, como se conversó en el diseño 
-                                        completamente al azar de un factor. En el caso de un diseño de dos factores (dos variables 
-                                        cualitativas independientes) la potencia se puede determinar mediante la utilización de dos 
-                                        métodos: <br><br>
-                                        El primero de los métodos es determinar la potencia de la interacción, para este caso la 
-                                        distribución de probabilidad teórica vendrá dada por:
-                                        $$F_{t-1,n-t,\\lambda}$$
-                                        Donde \\(t\\) representa la cantidad de celdas en el modelo, que normalmente viene dado por 
-                                        (\\(n_A \\cdot n_B\\)) donde \\(n_A\\) representa los niveles del factora \\(A\\) y \\(n_B\\) 
-                                        representa los niveles del factor \\(B\\).<br><br>
-                                        Por otro lado, \\(n\\) representa la cantidad de réplicas en el diseño. El parámetro de no 
-                                        centralidad \\(\\lambda\\), que es utilizado cuando no se cumple \\(H_0\\), viene dado por:
+                                        h4(HTML("Note that there is no hypothesis test for block.<br><br>")),
                                         
-                                        $$\\lambda = \\frac{r}{\\sigma^2} \\sum_i\\sum_j(\\bar \\mu_{ij}-\\bar \\mu_{..})^2$$
-                                        
-                                        El segundo de los métodos es determinar la potencia de los factores principales, en el caso 
-                                        un diseño de dos factores se tienen dos valores de \\(\\lambda\\), uno para el factor \\(A\\) 
-                                        y otro para el factor \\(B\\), entonces:
-                                        
-                                        $$\\lambda_A = \\frac{br}{\\sigma^2}\\sum_i(\\bar \\mu_{i.}-\\bar\\mu_{..})^2$$
-                                        $$\\lambda_B = \\frac{ar}{\\sigma^2}\\sum_j(\\bar \\mu_{.j}-\\bar\\mu_{..})^2$$
-                                        
-                                        En estas expresiones tememos que \\(r\\) son las réplicas, \\(b\\) son los niveles 
-                                        del factor \\(B\\) y \\(a\\) son los niveles del factor \\(A\\).
-                                        
-                                        "))
-                                 ),
-                        tabPanel("Resultados",
-                                 p(HTML("El principal resultado de un análisis que involucre un diseño completamente al azar de 
-                                        dos factores es TABLA ANOVA. Para el caso de dos factores la tabla estará compuesta por 
-                                        por tres filas a evaluar: <br><br>
-                                        1. El efecto del primer factor (\\(\\alpha_i\\))<br>
-                                        2. El efecto del segundo factor (\\(\\beta_j\\))<br>
-                                        3. El efecto de la interacción (\\(\\gamma_{ij}\\))<br><br>
-                                        
-                                        El primer efecto que el investigador deberá revisar es el de la interacción. Existen dos 
-                                        posibles opciones, que el efecto de interacción sea significatio o que no lo sea. En caso 
-                                        de que el efecto de interacción no se significativo, se podrán interpretar los efectos 
-                                        principales de forma separada, esto quiere decir realizando comparaciones múltiples 
-                                        para cada efecto principal, por el contrario si la interacción es significativa se deberán 
-                                        realizar comparaciones múltiples tomando en cuenta esta realidad (la realidad de que la 
-                                        variable respuesta de un factor varía con respecto a los niveles del otro factor).<br><br>
-                                        
-                                        ")),
-                                 h4(HTML("Posibles resultados en un diseño de dos factores")),
-                                 p(HTML("Existen 5 posibles combinaciones de resultados para un diseño factorial de dos factores: <br><br>
-                                        a. Que no existan efectos principales de los dos factores ni interacción <br>
-                                        b. Que exista efecto del factor principal \\(F_1\\) pero que no exista efecto del factor \\(F_2\\) 
-                                        ni que exista interacción. <br>
-                                        c. Que exista efecto del factor principal \\(F_2\\) pero que no exista efecto del factor \\(F_1\\) 
-                                        ni que exista interacción. <br>
-                                        d. Que exista efecto de ambos factores \\(F_1\\) y \\(F_2\\) y que no exista efecto de interacción. <br>
-                                        e. Que exista efecto de ambos factores \\(F_1\\) y \\(F_2\\) y que también exista efecto de interacción.
-                                        <br><br>")),
-                                 column(6,
-                                        h3(HTML("Caso \\(a\\)")),
-                                        img(src = "1.jpg", height = 300, width = 600),
-                                        
-                                        h3(HTML("Caso \\(c\\)")),
-                                        img(src = "3.jpg", height = 300, width = 600),
-                                        
-                                        h3(HTML("Caso \\(e\\)")),
-                                        img(src = "5.jpg", height = 300, width = 600)
-                                        ),
-                                 column(6,
-                                        h3(HTML("Caso \\(b\\)")),
-                                        img(src = "2.jpg", height = 300, width = 600),
-                                        
-                                        h3(HTML("Caso \\(d\\)")),
-                                        img(src = "4.jpg", height = 300, width = 600)
-                                        ),
-                                 
-                                 imageOutput("1"),
-                                 imageOutput("2"),
-                                 imageOutput("3"),
-                                 imageOutput("4")
-                                 
-                                 
+                                        h4(HTML("These hypotheses are formulated in terms of effects, 
+                             then \\(H_{0}\\) implies that the effect of the ith treatment on \\(\\mu\\) 
+                             is \\(0\\), no effect of factor or treatment.
+                               On the other hand \\(H_{a}\\) implies that at least one of the treatments 
+                               differs from the others, implies that there is a treatment effect. 
+                               "))
                                  )
+                        ),
+                        
+                        tabPanel(HTML("The model"),
+                                 
+                                 column(7,hr(),
+                                        h3(HTML("Linear Model for RBD")),
+                                        hr(),
+                                        
+                                        h5(HTML("The mathematical model to fit data to a random block  
+                                     design (RBD), with the same number of replicates for each level of the 
+                                     factor is:
+                                     <br>
+                                     
+                                     $$y_{ij} = \\mu + b_i + \\alpha_j + \\epsilon_{ij}$$
+                                     
+                                     where \\(y_{ij}\\) is the response variable for the ith block and jth treatment,
+                                     \\(\\mu\\) is the global mean of the combined populations,
+                                     \\(b_i\\) is the effect produced by the ith block,
+                                     \\(\\alpha_j\\) is the effect produced by the jth treatment, and finally 
+                                     \\(\\epsilon_{ij}\\) is the random experimental error associated with each observation 
+                                     \\(y_{ij}\\).<br><br>
+                                     To make estimates and hypothesis tests on the parameters \\(\\mu\\) and 
+                                     \\(\\alpha_{j}\\) is necessary to establish some conditions: <br><br>
+                                     1. The experimental errors \\(\\epsilon_{ij}\\) are independent and normally distributed 
+                                     \\(N(0,\\sigma^2)\\)<br>
+                                     2. Each treatment defines a population with normal distribution \\(N(\\mu_j,\\sigma^2)\\) 
+                                     and equal variance (homoscedasticity).
+                                     
+                                     
+                                     "))
+                                        
+                                        
+                                 )
+                                 
+                        ),
+                        
+                        tabPanel("Fitting Model",
+                                 hr(),
+                                 h3(HTML("How to fit a CRD model?")),
+                                 hr(),
+                                 column(8,
+                                        h4(HTML("Usin matrix notations we can write the effect model as:
+                                    
+                                    $$Y = X\\beta+\\epsilon$$
+                                    
+                                    where \\(X\\) is called matrix design.<br><br>
+                                    
+                                    The least squares estimators for \\(\\beta\\) are 
+                                    obtained by solving the matrix equationn:
+                                    
+                                    $$Y'Y - \\hat \\beta^{'} X'Y = Y'(I-X(X'X)^{-}X')Y$$
+                                    
+                                    where:
+                                    
+                                    $$(X'X)^{-1}X'Y = \\hat \\beta $$
+                                    
+                                    
+                                    "))
+                                        
+                                 )
+                                 
+                        ),
+                        
+                        tabPanel(HTML("Verifying Assumptions<br> of the model"),hr(),
+                                 h3(HTML("Is the fitted linear model valid?")),hr(),
+                                 
+                                 column(10,
+                                        h5(HTML("It is important to check the assumptions when applying a statistical technique, 
+                                      and in the case of model fit 
+                                     \\(y_{ij} = \\mu+b_i+\\alpha_j+\\epsilon_{ij}\\), is no exception.
+                                     <br><br>
+                                     Three assumptions must be verified to trust the model estimators: <br>
+                                     
+                                     1. The uncorrelation of the residuals <br>
+                                     2. Constant variance in residuals <br>
+                                     3. Normality of the residuals <br><br>
+                                     
+                                     The verification of the first assumption is made when the observations are 
+                                     not taken sequentially in time or space and do not have a cluster-like 
+                                     structure.<br><br>
+                                     
+                                     The assumption of equal variances (homoscedasticity) is not satisfied when 
+                                     the response variable of the linear model comes from counts or binary data, 
+                                     it can even be affected by the presence of atypical data..<br><br>
+                                     
+                                     To verify this assumption there are two ways, graphically or statistical 
+                                     tests. Graphically, a graph of residuals against predicted is made, it 
+                                     is common that it is made with the standardized residuals, these being: 
+                                     
+                                     $$r_{i0} = \\frac{\\hat \\epsilon_i}{\\sqrt(1-x_i(X'X)^-x'_i)}$$
+                                     
+                                     It is important that the chart does not show funnel-like behavior or some other kind of pattern..<br><br>
+                                     
+                                     On the other hand, a Bartlett test can be performed whose hypotheses are given by:
+                                     
+                                     $$H_0:\\sigma^2_1=\\sigma^2_2=\\cdots=\\sigma^2_k$$
+                                     $$H_1:\\sigma^2_i\\neq \\sigma^2_j \\hspace{1cm}i\\neq j$$
+                                     
+                                     The assumption of normality in some cases is related to that of homoscedasticity. <br><br>
+                                     
+                                     Graphically, the normal probabilistic graph or QQ-Plot can be used. This type of graph 
+                                     looks for the points to fall on the line of the theoretical quantiles of the normal 
+                                     distribution.<br><br>
+                                     
+                                     A statistical test used to check for normality on the residuals is the Shapiro-Wilks test. 
+                                     The hypothesis to be tested is: <br>
+                                     $$H_0:\\textit{The sample comes from a normal population.}$$
+                                     
+                                     This hypothesis is contrasted with the statistic:
+                                     
+                                     $$W_c = \\frac{1}{ns^2}\\left(\\sum_{i=1}^h a_{in}(w_{n-i+1}-w_i)\\right)^2$$
+
+                                     
+                                     ")),
+                                 )
+                                 
+                                 
+                        ),
+                        
+                        tabPanel("Power",hr(),
+                                 
+                                 h3(HTML("What is the power in a randomized block design?")),hr(),
+                                 column(8,
+                                        
+                                        h4(HTML("In the case of RBD, the objective is to determine 
+                                                the number of blocks associated with the probability 
+                                                of detecting significant differences in the treatments.
+                                                <br><br>
+                                                
+                                                The power associated with the RBD has a 
+                                                theoretical probability distribution given by:
+                                                
+                                                $$F_{t-1,(b-1)(t-1),\\lambda}$$
+                                                
+                                                Where \\(t\\) is the number of treatments and \\(b\\) is the 
+                                                number of blocks.<br><br>
+                                                
+                                                The non-centrality parameter for the F test associated 
+                                                with detecting significant differences in treatments 
+                                                for RBD is:
+                                                
+                                                $$\\lambda = \\displaystyle\\frac{b}{\\sigma^2}\\displaystyle\\sum_{j=1}^{t}(\\mu_j-\\bar \\mu)^2$$
+                                              
+                                              ")),
+                                 )
+                        ),
+                        
+                        tabPanel("Results",hr(),
+                                 h3(HTML("ANOVA table elements for randomized block design")),hr(),
+                                 
+                                 column(7,
+                                        
+                                        h5(HTML("When a researcher applies a randomized block design, the goal is to 
+                                              check if there are differences between the levels 
+                                              of treatments.<br><br>
+                                              
+                                              The ANOVA table for a randomized block design is:
+                                              
+                                              ")),
+                                        
+                                        img(src = "figura1.JPG", width=500),
+                                        
+                                        h5(HTML("Note that there is no F ratio for the block, since the block 
+                                                is included to homogenize the experimental units..<br><br>
+                                              
+                                              The elements of the sum of squares for ANOVA table, are given by:
+                                              
+                                              $$ssT=q\\displaystyle\\sum_{j=1}^{p}(\\bar y_{j}-\\bar y)^{2}
+                                              \\hspace{1cm}
+                                              ssBlock=p\\displaystyle\\sum_{i=1}^{q}(\\bar y_{i}-\\bar y)^{2}
+                                              \\hspace{1cm}
+                                              ssR = \\displaystyle\\sum_{i=1}^{p}\\displaystyle\\sum_{j=1}^q(\\bar y_{ij}-\\bar y_i-\\bar y_j + \\bar y)^2
+                                              $$
+                                              
+                                              $$ssTotal = \\displaystyle\\sum_{i=1}^p\\displaystyle\\sum_{j=1}^q(y_{ij}-\\bar y)^2
+                                              $$
+                                              
+                                              On the other hand, the elements that make up the Mean Square are given by:
+                                              
+                                              $$msT = \\displaystyle\\frac{ssT}{p-1}
+                                              \\hspace{0.5cm}
+                                              msBlock = \\displaystyle\\frac{ssBlock}{q-1}
+                                              \\hspace{0.5cm}
+                                               msE = \\displaystyle\\frac{ssE}{(p-1)(q-1)}
+                                              $$
+                                              
+                                              ")),
+                                        h5(HTML("The last column shows the ratio between \\(msT\\) and \\(msE\\), if this result is \\(\\gg 1\\), 
+                                     this implies that there is greater variability between treatments than within treatments, 
+                                     this generates significant differences between treatments.<br><br>
+                                     In \\(R\\), the ANOVA table has a column associated with the p-value, which represents the 
+                                     probability associated with the value of the F-ratio of a probability distribution \\(F\\). 
+                                     If the p-value is less than alpha, then there are significant differences in the treatments.
+                                     "))
+                                        
+                                 )
+                                 
+                        )
+                        
                       ),
              
              tabPanel(HTML("Parameter's <br> settings"), 
@@ -196,16 +267,16 @@ shinyUI(
                                hr(),
                                numericInput('num_sim',withMathJax('Simulations'),value=500),
                                numericInput('mu',withMathJax('Mean in absence of effects (\\(\\mu\\))'),value=100),
-                               numericInput('sigma',withMathJax('Common \\(\\sigma\\)'),value=3),
-                               numericInput('n','Sample size per cell',value=1),
-                               numericInput('alfa','Significance level',value=0.05),
+                               numericInput('sigma',withMathJax('Common sigma (\\(\\sigma\\))'),value=3),
+                               numericInput('n','Sample size per cell (\\(n\\))',value=1),
+                               numericInput('alfa','Significance level (\\(\\alpha\\))',value=0.05),
                                hr(),
-                               numericInput('rows',withMathJax('Levels of factor F (rows: \\(\\alpha_i\\) )'),value=4),
+                               numericInput('rows',withMathJax('Levels of factor F (rows: \\(\\alpha_j\\) )'),value=4),
                                h5(withMathJax('Effects of \\(F\\) (\\(\\alpha_i\\))')),
                                rHandsontableOutput("input_table_F1"),
-                               br(),br(),
-                               numericInput('cols',withMathJax('Levels of factor F2 (cols: \\(\\beta_j\\))'),value=8),
-                               h5(withMathJax('Blocks of \\(b\\) (\\(b_j\\))')),
+                               br(),
+                               numericInput('cols',withMathJax('Levels of Blocks F2 (cols: \\(b_i\\))'),value=8),
+                               h5(withMathJax('Blocks of \\(b\\) (\\(b_i\\))')),
                                rHandsontableOutput("input_table_F2"),
                                hr(),
                                #h5(withMathJax('Interaction parameters (\\(\\gamma_{ij}\\))')),
@@ -237,21 +308,21 @@ shinyUI(
                                                  br(),br(),
                                                  h3('Observed means'),
                                                  hr(),
-                                                 h3(HTML("Tabla resumen por bloque")),
+                                                 h3(HTML("Summary by block")),
                                                  tableOutput('TableMeans'),
                                                  hr(),
-                                                 h3(HTML("Tabla resumen por Tratamiento")),
-                                                 tableOutput('TableMeans1'),
-                                                 h3("Comportamiento del factor en el bloque"),
+                                                 h3(HTML("Summary by treatment")),
+                                                 tableOutput('TableMeans1'),hr(),
+                                                 h3("Descriptive Plot"),
                                                  hr(),
                                                  plotOutput('Means')
                                                  ),
                                           column(3,
-                                                 h3(HTML("Datos simulados")),
+                                                 h3(HTML("Simulation Data")),
                                                  tableOutput('datos')
                                                  ),
                                           column(2,br(),br(),br(),br(),
-                                                 downloadButton('downloadData', 'Salvar datos *.csv', 
+                                                 downloadButton('downloadData', 'Save data as *.csv', 
                                                  style = "color:white;background-color:black;")
                                                  )
                                           
@@ -273,20 +344,22 @@ shinyUI(
                                                  )),
                                  tabPanel('ANOVA',
                                           column(6,
-                                                 br(),
                                                  #checkboxInput('optAnova','Test without interactions?',value=FALSE),
-                                                 h3('ANOVA table for the generated example'),
+                                                 h3('ANOVA table with blocks'),
                                                  hr(),
                                                  verbatimTextOutput('ANOVA'),
-                                                 hr(),
-                                                 h3('ANOVA sin efecto del bloque'),
+                                                 hr(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
+                                                 h3('ANOVA table without block'),
                                                  hr(),
                                                  verbatimTextOutput('ANOVA1'),
                                                  ),
                                           column(6,
-                                                 h3(HTML("Compración por pares para \\(F_1\\)")),
+                                                 h3(HTML("Pairwise comparison with blocks")),
                                                  hr(),
-                                                 plotOutput('plot_emmeans2'),hr()
+                                                 plotOutput('plot_emmeans2'),hr(),
+                                                 h3(HTML("Pairwise comparison without blocks")),
+                                                 hr(),
+                                                 plotOutput('plot_emmeans31')
                                                  )
                                          
                                           #h3('Estimated effects and 95% CI'),
@@ -308,13 +381,27 @@ shinyUI(
                                #                   plotOutput('plot_emmeans3'))
                                #          )
                                #          ),
+                               
+                               tabPanel(HTML("Function <br>power"),
+                                        column(1,
+                                               ),
+                                        column(10,
+                                               h3(HTML("Power function for \\(\\alpha_i\\)")),
+                                               plotlyOutput("curve_powera"),hr(),br(),br(),
+                                               ),
+                                        # h3(HTML("Función de potencia para factor \\(\\beta_j\\)")),
+                                        # plotlyOutput("curve_powerb"),hr(),br(),br(),
+                                        # h3(HTML("Función de potencia para interacción \\(\\gamma_{ij}\\)")),
+                                        # plotlyOutput("curve_powerc"),br()
+                               ),
+                               
                                tabPanel('Power',
-                                        
-                                        column(6,
-                                               h3(HTML("Potencia para factor \\(A\\)")),
+                                        column(2,),
+                                        column(8,
+                                               h3(HTML("Power for factor \\(\\alpha_i\\)")),
                                                #actionButton('go_a', 'Potencia \\(F_1(\\alpha_i)\\)', class = "btn-warning"),
                                                plotOutput('f_nocentrada_a'),
-                                               tableOutput("algo")
+                                               #tableOutput("algo")
                                         )
                                         # column(6,
                                         #        h3(HTML("Potencia para factor \\(B\\)")),
@@ -331,80 +418,72 @@ shinyUI(
                                         
                                         
                                         
-                                        ),
-                               tabPanel(HTML("Function <br>power"),
-                                        h3(HTML("Función de potencia para factor \\(\\alpha_i\\)")),
-                                        plotlyOutput("curve_powera"),hr(),br(),br(),
-                                        # h3(HTML("Función de potencia para factor \\(\\beta_j\\)")),
-                                        # plotlyOutput("curve_powerb"),hr(),br(),br(),
-                                        # h3(HTML("Función de potencia para interacción \\(\\gamma_{ij}\\)")),
-                                        # plotlyOutput("curve_powerc"),br()
                                         )
                                )
                                
                       ))
                       ),
              
-             tabPanel(HTML("Analizando <br>datos propios"),
-                      tabsetPanel(
-                        tabPanel("Cargando datos",
-                                 column(4,
-                                        fileInput('target_upload1', 'Choose file to upload',
-                                                  accept = c(
-                                                    'text/csv',
-                                                    'text/comma-separated-values',
-                                                    '.csv'
-                                                  )),
-                                        radioButtons("separator","Separator: ",choices = c(";",",",":"), selected=";",inline=TRUE),
-                                        dataTableOutput("sample_table")
-                                 )
-                        ),
-                        tabPanel("Descriptiva",br(),br(),br(),
-                                 column(6,
-                                        h3(HTML("Descripción de los datos en forma tabular")),
-                                        tableOutput("descc_plot")
-                                 ),
-                                 column(6,
-                                        h3(HTML("Descripción de los datos en forma gráfica")),
-                                        plotOutput("plot_plot")
-                                 )
-                        ),
-                        tabPanel("Supuestos",br(),br(),
-                                 column(6,
-                                        h3(HTML("Normalidad")),
-                                        plotOutput("norm_norm"),
-                                        verbatimTextOutput("shapiro_norm")
-                                 ),
-                                 column(6,
-                                        h3(HTML("Homocedasticidad")),
-                                        plotOutput("homo_homo"),
-                                        verbatimTextOutput("bartlet_homo")
-                                 )
-                                 
-                                 
-                        ),
-                        tabPanel("Resultados",
-                                 column(6,br(),br(),br(),
-                                        h3(HTML("Tabla ANOVA")),
-                                        verbatimTextOutput("table_anovaa")
-                                 ),
-                                 column(6,br(),br(),br(),
-                                        h3(HTML("Gráfico de comparaciones Múltiples")),
-                                        plotOutput("comp_usuari1"),
-                                        plotOutput("comp_usuari2")
-                                 )
-                        ),
-                        tabPanel("Potencia",br(),br(),
-                                 column(6,
-                                        h3(HTML("Potencia que presentan los datos")),
-                                        verbatimTextOutput("power_power")
-                                 )
-                        )
-                      )
-                      
-                      
-                      
-             )
+             # tabPanel(HTML("Analizando <br>datos propios"),
+             #          tabsetPanel(
+             #            tabPanel("Cargando datos",
+             #                     column(4,
+             #                            fileInput('target_upload1', 'Choose file to upload',
+             #                                      accept = c(
+             #                                        'text/csv',
+             #                                        'text/comma-separated-values',
+             #                                        '.csv'
+             #                                      )),
+             #                            radioButtons("separator","Separator: ",choices = c(";",",",":"), selected=";",inline=TRUE),
+             #                            dataTableOutput("sample_table")
+             #                     )
+             #            ),
+             #            tabPanel("Descriptiva",br(),br(),br(),
+             #                     column(6,
+             #                            h3(HTML("Descripción de los datos en forma tabular")),
+             #                            tableOutput("descc_plot")
+             #                     ),
+             #                     column(6,
+             #                            h3(HTML("Descripción de los datos en forma gráfica")),
+             #                            plotOutput("plot_plot")
+             #                     )
+             #            ),
+             #            tabPanel("Supuestos",br(),br(),
+             #                     column(6,
+             #                            h3(HTML("Normalidad")),
+             #                            plotOutput("norm_norm"),
+             #                            verbatimTextOutput("shapiro_norm")
+             #                     ),
+             #                     column(6,
+             #                            h3(HTML("Homocedasticidad")),
+             #                            plotOutput("homo_homo"),
+             #                            verbatimTextOutput("bartlet_homo")
+             #                     )
+             #                     
+             #                     
+             #            ),
+             #            tabPanel("Resultados",
+             #                     column(6,br(),br(),br(),
+             #                            h3(HTML("Tabla ANOVA")),
+             #                            verbatimTextOutput("table_anovaa")
+             #                     ),
+             #                     column(6,br(),br(),br(),
+             #                            h3(HTML("Gráfico de comparaciones Múltiples")),
+             #                            plotOutput("comp_usuari1"),
+             #                            plotOutput("comp_usuari2")
+             #                     )
+             #            ),
+             #            tabPanel("Potencia",br(),br(),
+             #                     column(6,
+             #                            h3(HTML("Potencia que presentan los datos")),
+             #                            verbatimTextOutput("power_power")
+             #                     )
+             #            )
+             #          )
+             #          
+             #          
+             #          
+             # )
              
              # tabPanel("Planning",
              #          column(2,style = "background-color:#d4af37;",
@@ -456,14 +535,17 @@ shinyUI(
              
   ),
 
-hr(),
-img(src = "Institutions.png", width=600),
-hr(),
-HTML('<b>Project: PI20/00377</b> <br>
+  hr(),
+  column(5,
+         h6(HTML('<b>Project: PI20/00377</b> <br>
          Albert Sorribas, Ester Vilaprinyo, Rui Alves, Pedro Sandoval <br>
          Miguel Ángel Escobar, Jose Serrano, Xavier Gómez <br>
          Biomodels Group <br>
-         University of Lleida - Institute of Biomedical Research (IRBLleida)'),
-hr()
+         University of Lleida - Institute of Biomedical Research (IRBLleida)'))
+  ),
+  column(1),
+  column(4,
+         img(src = "Institutions.png", width=400),
+  ),br(),br(),br()
   )
 )

@@ -81,7 +81,7 @@ homocedast <- function(datos){
     geom_point(size= I(3), col='blue') +
     geom_hline(yintercept = 0, linetype ='dashed') +
     labs(x = "Fitted values", y = "Residuals") +
-    ggtitle('Revision homocedasticidad') +
+    ggtitle('Homocedasticity plot') +
     theme(plot.title = element_text(hjust = 0.5, size = rel(1.5)))
   return(p4)
 }
@@ -91,9 +91,9 @@ normalidad <- function(datos){
   res <- lm(response~F1+F2,datos)
   p2 <- ggplot(datos, aes(sample = res$residuals))+ 
     stat_qq(size= I(3)) + stat_qq_line(size= I(0.6)) +
-    ggtitle('Prueba de normalidad') +
+    ggtitle('QQ-Plot') +
     theme(plot.title = element_text(hjust = 0.5, size = rel(1.5))) +
-    labs(y="Residuos Estandarizados", x="Quantiles teoricos")
+    labs(y="Residuals", x="quantils")
   return(p2)
 }
 
@@ -266,7 +266,8 @@ shinyServer(function(input, output) {
                    geom = "pointrange") +
       geom_line(stat = "summary", fun = mean, size=.75)+
       labs(x='Bloques',y='Respuesta',color='Factor')+
-      ylim(input$yRange[1],input$yRange[2])
+      ylim(input$yRange[1],input$yRange[2])+
+      labs(x='Blocks',y='Response')
     
   })
   
@@ -312,7 +313,7 @@ shinyServer(function(input, output) {
   })
   
 
-  # Plot emmeans para interacción
+  # Plot emmeans con bloques
   output$plot_emmeans2 <- renderPlot({
     
     datos <- dataF1F2() %>% as.data.frame()
@@ -338,6 +339,34 @@ shinyServer(function(input, output) {
     p10
     
     })
+  
+  # Plot emmeans sin bloques
+  output$plot_emmeans31 <- renderPlot({
+    
+    datos <- dataF1F2() %>% as.data.frame()
+    
+    datos$F1 <- factor(datos$F1)
+    datos$F2 <- factor(datos$F2)
+    
+    res <- lm(response~F1,datos)
+    tky1 = as.data.frame(TukeyHSD(aov(res))$F1)
+    tky1$pair = rownames(tky1) 
+    
+    # Plot pairwise TukeyHSD comparisons and color by significance level
+    p10 <-  ggplot(tky1, aes(colour=cut(`p adj`, c(0, 0.01, 0.05, 1), 
+                                        label=c("p<0.01","p<0.05","Non-Sig")))) +
+      geom_hline(yintercept=0, linetype ='dashed') +
+      geom_errorbar(aes(pair, ymin=lwr, ymax=upr), width=0.2,size=0.8) +
+      geom_point(aes(pair, diff),size=2) +
+      labs(colour="") +
+      ggtitle(('Model = respuesta ~ treat')) +
+      theme(plot.title = element_text(hjust = 0.5, size = rel(1.5))) +
+      labs(y="Diferencia", x="Pares")
+    
+    p10
+    
+  })
+  
   
   # Plot emmeans para interacción
   output$plot_emmeans3 <- renderPlot({
@@ -595,7 +624,8 @@ shinyServer(function(input, output) {
       geom_segment(aes(x = 0, y = powera1, xend = input$cols, yend = powera1),
                    linetype = "dashed", colour='orange')+
       geom_point(aes(x=input$cols,y=powera1), colour="blue", size=2)+
-      annotate(geom = "text",x=10, y=0.3, label = paste("La potencia es de: ",powera1))
+      annotate(geom = "text",x=10, y=0.3, label = paste("The power is: ",powera1))+
+      labs(x='Blocks', y='Power')
     
     ggplotly(p17)
     
