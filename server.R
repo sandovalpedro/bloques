@@ -532,13 +532,20 @@ shinyServer(function(input, output) {
   
   output$f_nocentrada_a <- renderPlot({
     
+    withProgress(message = 'Computing Simulations', value = 0, {
+      for (i in 1:15) {
+        incProgress(1/15)
+        Sys.sleep(0.15)
+      }
+      
+    
    plot2()
     
     #    plot_final1 <- dibujito1 + xlim(input$xRange[1],input$xRange[2])
     
     #    dibujito1
-    
-    
+   
+    })
   })
   
   
@@ -585,6 +592,12 @@ shinyServer(function(input, output) {
   ## Curva de potencia para factor A
   output$curve_powera <- renderPlotly({
     
+    withProgress(message = 'Computing Simulations', value = 0, {
+      for (i in 1:15) {
+        incProgress(1/15)
+        Sys.sleep(0.15)
+      }
+    
     x1 <- 2
     x2 <- 30
     nrep <- c(x1:x2)
@@ -628,6 +641,8 @@ shinyServer(function(input, output) {
       labs(x='Blocks', y='Power')
     
     ggplotly(p17)
+    
+    })
     
   }) 
   
